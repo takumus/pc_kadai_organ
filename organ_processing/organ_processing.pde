@@ -7,7 +7,7 @@ ArrayList<boolean[]> lines = new ArrayList<boolean[]>();
 Serial myPort;
 int recData = 0;
 
-float OFFSETY = -2.5;
+float OFFSETY = -4;
 int LED_POWER = 880;
 int LED_POWER_WHITE = 880;
 
@@ -75,11 +75,11 @@ void draw() {
     float lx = (_y-100)*5;
     float ly = lineId * 60 + 30;
     int id = int((_y-100+OFFSETY)/6);
-    stroke(id%2==0?#333333:#666666);
+    stroke(led < LED_POWER?#333333:#999999);
     strokeWeight(5);
     line(lx, ly - lh/2, lx, ly + lh/2);
     led1 = false;
-    _y += 0.7;
+    _y += 1;
     if(_y > 100 + 75) {
       wait = 0;
       phase = "next";
@@ -101,8 +101,8 @@ void draw() {
           tmpLine[i] = line[i]>7;
           if(tmpLine[i] && i > 1){
             noStroke();
-            fill(#ff0000, 80);
-            ellipse(lx, ly, 45, 45);
+            fill(#ffffff);
+            ellipse(lx, ly, 10, 10);
             noFill();
           }
           //print((tmpLine[i]?"#":"-"));
@@ -145,6 +145,7 @@ void draw() {
 void receiveLED() {
   if(phase.equals("read")){
     int id = int((_y-100+OFFSETY)/6);
+    if(id < 0) id = 0;
      if(led < LED_POWER){
        line[id] ++;
        //led1 = true;
