@@ -23,6 +23,7 @@ float cy = 135;
 int wait = 0;
 float rect = 10;
 int[] line = new int[20];
+int lineId = 0;
 float _y = 100;
 int led = 0;
 String phase = "find";
@@ -32,13 +33,23 @@ boolean led2 = false;
 int playTick = 30;
 
 Player player;
+
 void setup() {
   frameRate(60);
-  size(500, 500);
+  size(500, 1600);
   player = new Player(new Minim(this));
   myPort = new Serial(this, "COM3", 9600);
   manager = new ArmManager(RX, RY, ARM1L, ARM2L, W/2-60, 100, 120, 70);
   phase = "none";
+}
+void clearScreen() {
+  background(#ffffff);
+  strokeWeight(1);
+  stroke(#CCCCCC);
+  for(int li = 0; li < 20; li++){
+    int lx = int(li*6-OFFSETY)*5;
+    line(lx, 0, lx, height);
+  }
 }
 void draw() {
   float _x;
@@ -60,6 +71,13 @@ void draw() {
     }
  
   }else if(phase.equals("read")){
+    float lh = float(1023-led)/1023f*50f*2;
+    float lx = (_y-100)*5;
+    float ly = lineId * 60 + 30;
+    int id = int((_y-100+OFFSETY)/6);
+    stroke(id%2==0?#333333:#666666);
+    strokeWeight(5);
+    line(lx, ly - lh/2, lx, ly + lh/2);
     led1 = false;
     _y += 0.7;
     if(_y > 100 + 75) {
@@ -75,9 +93,18 @@ void draw() {
     if(wait > 30){
       if(led > LED_POWER_WHITE){
         boolean[] tmpLine = new boolean[20];
+        float ly = lineId * 60 + 30;
         for(int i = 0; i < 20; i ++){
+          float lx = (float(i)*6f - OFFSETY + 3f) * 5f;
+          
           print((line[i]<10?"0":"")+line[i]+"|");
-          tmpLine[i] = line[i]>5;
+          tmpLine[i] = line[i]>7;
+          if(tmpLine[i] && i > 1){
+            noStroke();
+            fill(#ff0000, 80);
+            ellipse(lx, ly, 45, 45);
+            noFill();
+          }
           //print((tmpLine[i]?"#":"-"));
           line[i] = 0;
         }
@@ -85,6 +112,7 @@ void draw() {
         player.playLine(tmpLine);
         lines.add(tmpLine);
         phase = "find";
+        lineId ++;
         wait = 0;
       }else{
         roller = true;
@@ -95,10 +123,12 @@ void draw() {
     roller = false;
     _x = cx + 60;
     if(wait > playTick) {
-      player.next();
+      led1 = !led1;
+      if(player.next()){
+        led1 = true;
+      }
       wait = 0;
       //beating led
-      led1 = !led1;
     }
     
     _y = 100;
@@ -124,6 +154,8 @@ void receiveLED() {
   }
 }
 void btn1() {
+  clearScreen();
+  lineId = 0;
   println("start scanning");
   lines = new ArrayList<boolean[]>();
   phase = "find";
@@ -280,15 +312,17 @@ class Player {
   }
   public boolean next() {
     if(_sound.size() < 1) return false;
-    
+    boolean first = false;
     if(id >= _sound.size()) id = 0;
+    
+    if(id == 0) first = true;
     
     boolean[] line = _sound.get(id);
     
     playLine(line);
     
     id ++;
-    return true;
+    return first;
   }
   public void playLine(boolean[] line) {
     for(int i = 0; i < line.length; i ++){
