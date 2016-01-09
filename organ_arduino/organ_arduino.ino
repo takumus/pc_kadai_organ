@@ -58,6 +58,13 @@ void loop()
     
     count = 0;
   }
+  if(0 > sv1r || sv1r > 180){
+    count = 120;
+  }
+  if(0 > sv2r || sv2r > 180){
+    count = 120;
+  }
+  
   if(count > 100){
     sv1r = 0;
     sv2r = 0;
